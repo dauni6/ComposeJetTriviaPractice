@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dontsu.composejettriviapractice.screens.QuestionViewModel
+import com.dontsu.composejettriviapractice.screens.TriviaHome
 import com.dontsu.composejettriviapractice.ui.theme.ComposeJetTriviaPracticeTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -33,23 +34,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun TriviaHome(viewModel: QuestionViewModel = hiltViewModel()) {
-    Questions(viewModel = viewModel)
-}
-
-@Composable
-fun Questions(viewModel: QuestionViewModel) {
-    val questions = viewModel.data.value.data?.toMutableList() // ArrayList이기 때문에 MutableList()로 캐스팅함
-    if (viewModel.data.value.loading == true) {
-        Log.d("TEST", "Questions: ...Loading...")
-    } else {
-        Log.d("TEST", "Questions: ...Loading stopped...")
-        questions?.forEach { questionItem ->
-            Log.d("TEST", "Questions: ${questionItem.question}")
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
