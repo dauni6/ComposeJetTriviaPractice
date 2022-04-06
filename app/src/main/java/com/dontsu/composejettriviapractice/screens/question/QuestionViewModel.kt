@@ -1,4 +1,4 @@
-package com.dontsu.composejettriviapractice.screens
+package com.dontsu.composejettriviapractice.screens.question
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +29,10 @@ class QuestionViewModel @Inject constructor(
             data.value.loading = false
         }
 
+    }
+
+    fun getTotalQuestionCount(): Int {
+        return data.value.data?.toMutableList()?.size ?: 0
     }
 
 }

@@ -1,11 +1,16 @@
 package com.dontsu.composejettriviapractice.di
 
+import android.content.Context
+import androidx.room.Room
 import com.dontsu.composejettriviapractice.BuildConfig
+import com.dontsu.composejettriviapractice.data.local.QuestionDatabase
+import com.dontsu.composejettriviapractice.data.local.QuestionDatabaseDao
 import com.dontsu.composejettriviapractice.data.network.QuestionApiService
 import com.dontsu.composejettriviapractice.util.Url.BASE_URL
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -56,5 +61,19 @@ object AppModule {
             .addInterceptor(interceptor)
             .build()
     }
+
+    @Singleton
+    @Provides
+    fun provideQuestionDao(questionDatabase: QuestionDatabase): QuestionDatabaseDao = questionDatabase.questionDao()
+
+    @Singleton
+    @Provides
+    fun provideQuestionDatabase(@ApplicationContext context: Context): QuestionDatabase =
+        Room.databaseBuilder(
+            context,
+            QuestionDatabase::class.java,
+            "question_db"
+        ).fallbackToDestructiveMigration()
+            .build()
 
 }

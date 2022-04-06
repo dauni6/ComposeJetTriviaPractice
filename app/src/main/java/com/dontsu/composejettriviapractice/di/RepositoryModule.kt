@@ -2,6 +2,8 @@ package com.dontsu.composejettriviapractice.di
 
 import com.dontsu.composejettriviapractice.data.repository.QuestionRepository
 import com.dontsu.composejettriviapractice.data.repository.QuestionRepositoryImpl
+import com.dontsu.composejettriviapractice.data.repository.RightAnswerRepository
+import com.dontsu.composejettriviapractice.data.repository.RightAnswerRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,5 +17,10 @@ abstract class RepositoryModule {
     abstract fun provideQuestionRepository(
         questionRepositoryImpl: QuestionRepositoryImpl
     ): QuestionRepository
+
+    @Binds
+    abstract fun provideRightAnswerRepository(
+        rightAnswerRepositoryImpl: RightAnswerRepositoryImpl
+    ): RightAnswerRepository
 
 }

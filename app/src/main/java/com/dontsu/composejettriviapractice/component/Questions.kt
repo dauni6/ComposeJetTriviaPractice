@@ -1,16 +1,14 @@
 package com.dontsu.composejettriviapractice.component
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.ButtonDefaults.buttonColors
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,16 +16,19 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dontsu.composejettriviapractice.data.model.QuestionItem
-import com.dontsu.composejettriviapractice.screens.QuestionViewModel
+import com.dontsu.composejettriviapractice.screens.question.QuestionViewModel
 import com.dontsu.composejettriviapractice.util.AppColors
 import java.lang.Exception
 
@@ -35,31 +36,41 @@ import java.lang.Exception
 fun Questions(viewModel: QuestionViewModel) {
     val questions = viewModel.data.value.data?.toMutableList() // ArrayList이기 때문에 MutableList()로 캐스팅함
 
-    val questionIndex = remember {
-        mutableStateOf(0)
-    }
+    val questionIndex = remember { mutableStateOf(0) }
 
-    if (viewModel.data.value.loading == true) {
-        CircularProgressIndicator()
-    } else {
-        val question = try {
-            questions?.get(questionIndex.value)
-        } catch (ex: Exception) {
-            null
-        }
-        if (questions != null && question != null) {
-            QuestionDisplay(
-                question = question,
-                questionIndex = questionIndex,
-                viewModel = viewModel
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = AppColors.mDarkPurple
+    ) {
+        if (viewModel.data.value.loading == true) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                questionIndex.value = questionIndex.value + 1
+                CircularProgressIndicator(
+                    modifier = Modifier.size(50.dp),
+                    color = AppColors.mOffWhite
+                )
+            }
+        } else {
+            val question = try {
+                questions?.get(questionIndex.value)
+            } catch (ex: Exception) {
+                null
+            }
+            if (questions != null && question != null) {
+                QuestionDisplay(
+                    question = question,
+                    questionIndex = questionIndex,
+                    viewModel = viewModel
+                ) {
+                    questionIndex.value = questionIndex.value + 1
+                }
             }
         }
     }
 }
 
-//@Preview(showBackground = true)
 @Composable
 fun QuestionDisplay(
     question: QuestionItem,
@@ -67,6 +78,8 @@ fun QuestionDisplay(
     viewModel: QuestionViewModel,
     onNextClicked: (Int) -> Unit = { }
 ) {
+    val context = LocalContext.current.applicationContext
+
     val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     val choicesState = remember(question) { // remember의 인자로 이렇게 넣는거 도대체 뭐지??
         question.choices.toMutableList()
@@ -86,114 +99,118 @@ fun QuestionDisplay(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = AppColors.mDarkPurple
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(12.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
-        ) {
-            QuestionTracker(counter = questionIndex.value)
-            DrawDottedLine(pathEffect = pathEffect)
+    var chooseState by remember { mutableStateOf(false) }
 
-            Column {
-                Text(
-                    text = question.question,
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .align(alignment = Alignment.Start)
-                        .fillMaxHeight(0.3f),
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                    color = AppColors.mOffWhite
-                )
-                // 선택수 만큼 라디오버튼 만들기
-                choicesState.forEachIndexed { index, answerText ->
-                    Row(
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .fillMaxWidth()
-                            .height(45.dp)
-                            .border(
-                                width = 4.dp,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        AppColors.mOffDarkPurple,
-                                        AppColors.mOffDarkPurple
-                                    )
-                                ),
-                                shape = RoundedCornerShape(14.dp)
-                            )
-                            .clip(
-                                RoundedCornerShape(
-                                    topStartPercent = 50,
-                                    topEndPercent = 50,
-                                    bottomStartPercent = 50,
-                                    bottomEndPercent = 50
-                                )
-                            )
-                            .background(Color.Transparent),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = answerState.value == index,
-                            onClick = {
-                                updateAnswer(index)
-                            },
-                            modifier = Modifier.padding(start = 16.dp),
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = if (correctAnswerState.value == true && index == answerState.value) {
-                                    Color.Green.copy(alpha = 0.7f)
-                                } else {
-                                    Color.Red.copy(alpha = 0.7f)
-                                }
-                            )
-                        ) // end radio button
-                        val annotatedString = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (correctAnswerState.value == true && index == answerState.value) {
-                                        Color.Green
-                                    } else if (correctAnswerState.value == false && index == answerState.value) {
-                                        Color.Red
-                                    } else {
-                                        AppColors.mOffWhite
-                                    },
-                                    fontSize = 17.sp
-                                )
-                            ) {
-                                append(answerText)
-                            }
-                        }
-                        Text(text = annotatedString, modifier = Modifier.padding(6.dp))
-                    }
-                }
-                Button(
-                    onClick = {
-                        onNextClicked(questionIndex.value)
-                    },
+    Column(
+        modifier = Modifier
+            .padding(12.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        /*if (questionIndex.value >= 3)*/ ShowProgress(score = questionIndex.value)
+        QuestionTracker(counter = questionIndex.value, outOf = viewModel.getTotalQuestionCount())
+        DrawDottedLine(pathEffect = pathEffect)
+
+        Column {
+            Text(
+                text = question.question,
+                modifier = Modifier
+                    .padding(6.dp)
+                    .align(alignment = Alignment.Start)
+                    .fillMaxHeight(0.3f),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 22.sp,
+                color = AppColors.mOffWhite
+            )
+            // 선택될 수 있는 수 만큼 라디오버튼 만들기
+            choicesState.forEachIndexed { index, answerText ->
+                Row(
                     modifier = Modifier
                         .padding(3.dp)
-                        .align(alignment = Alignment.CenterHorizontally),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = AppColors.mLightBlue
-                    )
+                        .fillMaxWidth()
+                        .height(45.dp)
+                        .border(
+                            width = 4.dp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    AppColors.mOffDarkPurple,
+                                    AppColors.mOffDarkPurple
+                                )
+                            ),
+                            shape = RoundedCornerShape(14.dp)
+                        )
+                        .clip(
+                            RoundedCornerShape(
+                                topStartPercent = 50,
+                                topEndPercent = 50,
+                                bottomStartPercent = 50,
+                                bottomEndPercent = 50
+                            )
+                        )
+                        .background(Color.Transparent),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Next",
-                        modifier = Modifier.padding(2.dp),
-                        color = AppColors.mOffWhite,
-                        fontSize = 17.sp
-                    )
+                    RadioButton(
+                        selected = answerState.value == index,
+                        onClick = {
+                            chooseState = true
+                            updateAnswer(index)
+                        },
+                        modifier = Modifier.padding(start = 16.dp),
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = if (correctAnswerState.value == true && index == answerState.value) {
+                                Color.Green.copy(alpha = 0.7f)
+                            } else {
+                                Color.Red.copy(alpha = 0.7f)
+                            }
+                        )
+                    ) // end radio button
+                    val annotatedString = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                color = if (correctAnswerState.value == true && index == answerState.value) {
+                                    Color.Green
+                                } else if (correctAnswerState.value == false && index == answerState.value) {
+                                    Color.Red
+                                } else {
+                                    AppColors.mOffWhite
+                                },
+                                fontSize = 17.sp
+                            )
+                        ) {
+                            append(answerText)
+                        }
+                    }
+                    Text(text = annotatedString, modifier = Modifier.padding(6.dp))
                 }
-
             }
+            Button(
+                onClick = {
+                    if (chooseState) {
+                        onNextClicked(questionIndex.value)
+                        chooseState = false
+                    } else {
+                        Toast.makeText(context, "정답을 선택해주세요!", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier
+                    .padding(3.dp)
+                    .align(alignment = Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = AppColors.mLightBlue
+                )
+            ) {
+                Text(
+                    text = "Next",
+                    modifier = Modifier.padding(2.dp),
+                    color = AppColors.mOffWhite,
+                    fontSize = 17.sp
+                )
+            }
+
         }
     }
 }
@@ -232,7 +249,7 @@ fun QuestionTracker(
                         fontSize = 27.sp
                     )
                 ) {
-                    append("Question $counter/")
+                    append("Question ${counter + 1}/")
                     withStyle(
                         style = SpanStyle(
                             color = AppColors.mLightGray,
@@ -247,4 +264,67 @@ fun QuestionTracker(
         },
         modifier = Modifier.padding(20.dp)
     )
+}
+
+@Preview
+@Composable
+fun ShowProgress(score: Int = 12) {
+    val gradient = Brush.linearGradient(colors = listOf(Color(0xFFF95075), Color(0xFFBE6BE5)))
+    val progressFactor by remember(score) {
+        mutableStateOf(score * 0.005f)
+    }
+
+    Row(
+        modifier = Modifier
+            .padding(3.dp)
+            .fillMaxWidth()
+            .height(45.dp)
+            .border(
+                width = 4.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        AppColors.mLightPurple,
+                        AppColors.mLightPurple
+                    )
+                ),
+                shape = RoundedCornerShape(34.dp)
+            )
+            .clip(
+                RoundedCornerShape(
+                    topStartPercent = 50,
+                    topEndPercent = 50,
+                    bottomEndPercent = 50,
+                    bottomStartPercent = 50
+                )
+            )
+            .background(Color.Transparent),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 스코어미터를 만드는데 버튼을 사용한다. 뭐 다른 Canvas나 그런걸 사용할 줄 알았는데 버튼으로 만들기 쉬워서 그렇다고 한다.
+        Button(
+            contentPadding = PaddingValues(1.dp),
+            onClick = { },
+            modifier = Modifier
+                .fillMaxWidth(progressFactor)
+                .background(brush = gradient),
+            enabled = false,
+            elevation = null,
+            colors = buttonColors(
+                backgroundColor = Color.Transparent,
+                disabledBackgroundColor = Color.Transparent
+            )
+        ) {
+            Text(
+                text = (score * 10).toString(),
+                modifier = Modifier
+                    .clip(shape = RoundedCornerShape(23.dp))
+                    .fillMaxHeight(0.87f)
+                    .fillMaxWidth()
+                    .padding(6.dp),
+                color = AppColors.mOffWhite,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+
 }
