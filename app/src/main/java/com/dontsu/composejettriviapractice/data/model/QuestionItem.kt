@@ -1,6 +1,7 @@
 package com.dontsu.composejettriviapractice.data.model
 
 
+import com.dontsu.composejettriviapractice.data.entity.QuestionEntity
 import com.google.gson.annotations.SerializedName
 
 data class QuestionItem(
@@ -12,4 +13,13 @@ data class QuestionItem(
     val choices: List<String>,
     @SerializedName("question")
     val question: String
-)
+) {
+    fun toEntity(): QuestionEntity {
+        return QuestionEntity(
+            answer = this.answer,
+            category = this.category,
+            choices = this.choices,
+            question = this.question
+        )
+    }
+}

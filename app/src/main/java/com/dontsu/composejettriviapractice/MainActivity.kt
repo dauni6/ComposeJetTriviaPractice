@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import com.dontsu.composejettriviapractice.screens.TriviaHome
+import com.dontsu.composejettriviapractice.navigation.TriviaNavigation
+import com.dontsu.composejettriviapractice.screens.question.TriviaHome
 import com.dontsu.composejettriviapractice.ui.theme.ComposeJetTriviaPracticeTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -21,7 +22,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    TriviaHome()
+                    TriviaNavigation()
                 }
             }
         }

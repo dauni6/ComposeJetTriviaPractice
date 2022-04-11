@@ -27,13 +27,18 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.dontsu.composejettriviapractice.data.model.QuestionItem
+import com.dontsu.composejettriviapractice.navigation.TriviaScreens
 import com.dontsu.composejettriviapractice.screens.question.QuestionViewModel
 import com.dontsu.composejettriviapractice.util.AppColors
 import java.lang.Exception
 
 @Composable
-fun Questions(viewModel: QuestionViewModel) {
+fun Questions(
+    viewModel: QuestionViewModel,
+    navController: NavController
+) {
     val questions = viewModel.data.value.data?.toMutableList() // ArrayList이기 때문에 MutableList()로 캐스팅함
 
     val questionIndex = remember { mutableStateOf(0) }
@@ -62,7 +67,8 @@ fun Questions(viewModel: QuestionViewModel) {
                 QuestionDisplay(
                     question = question,
                     questionIndex = questionIndex,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    navController = navController
                 ) {
                     questionIndex.value = questionIndex.value + 1
                 }
@@ -76,6 +82,7 @@ fun QuestionDisplay(
     question: QuestionItem,
     questionIndex: MutableState<Int>,
     viewModel: QuestionViewModel,
+    navController: NavController,
     onNextClicked: (Int) -> Unit = { }
 ) {
     val context = LocalContext.current.applicationContext
@@ -190,6 +197,9 @@ fun QuestionDisplay(
                 onClick = {
                     if (chooseState) {
                         onNextClicked(questionIndex.value)
+                        if (correctAnswerState.value == true) {
+                            viewModel.addRightAnswer(question)
+                        }
                         chooseState = false
                     } else {
                         Toast.makeText(context, "정답을 선택해주세요!", Toast.LENGTH_SHORT).show()
@@ -199,7 +209,7 @@ fun QuestionDisplay(
                     .padding(3.dp)
                     .align(alignment = Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
+                colors = buttonColors(
                     backgroundColor = AppColors.mLightBlue
                 )
             ) {
@@ -210,7 +220,8 @@ fun QuestionDisplay(
                     fontSize = 17.sp
                 )
             }
-
+            Spacer(modifier = Modifier.height(100.dp))
+            TriviaRightAnswerScreenButton(navController = navController)
         }
     }
 }
@@ -327,4 +338,21 @@ fun ShowProgress(score: Int = 12) {
         }
     }
 
+}
+
+@Composable
+fun TriviaRightAnswerScreenButton(navController: NavController) {
+    Button(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            navController.navigate(route = TriviaScreens.TriviaRightAnswerScreen.name)
+        }
+    ) {
+        Text(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            text = "Right Answer List =3",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
 }
